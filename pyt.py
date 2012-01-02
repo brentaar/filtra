@@ -86,7 +86,6 @@ def filemd5(filepath):
  return md5.hexdigest()
 
 def hashclean():
-  print "HASH CLEAN"
   q1 = "SELECT id FROM pyth_files WHERE fileexist = 0"
   cur.execute(q1)
   rows = cur.fetchall()
