@@ -7,8 +7,6 @@ import os
 import hashlib
 import StringIO
 
-con = None
-
 def fileindex():
   for root,dirs,files in os.walk(pytcwd):
     for files in files:
@@ -23,10 +21,10 @@ def fileindex():
       filename = os.path.basename(files)
       filename = msani(filename)
       cur.execute(q1)
-      rows = cur.fetchone()
-      
+      rows = cur.fetchone()     
       if rows < 1:
-        q2 = "INSERT INTO pyth_files SET filename = '%s', filepath = '%s', filetype = '%s', fileexist = 1 " % (filename,filepath,fileex)
+        q2 = """INSERT INTO pyth_files 
+          SET filename = '%s', filepath = '%s', filetype = '%s', fileexist = 1 """ % (filename,filepath,fileex)
         cur.execute(q2)    
     con.commit()
 
@@ -37,13 +35,17 @@ def msani(v):
   return v
 
 def checkexist():
-  q3 = "SELECT id,filepath FROM pyth_files WHERE filepath LIKE '%s%%' " % pytcwd
-  cur.execute(q3)
+  q1 = "SELECT id,filepath FROM pyth_files WHERE filepath LIKE '%s%%' " % pytcwd
+  cur.execute(q1)
   rows = cur.fetchall()
   for row in rows:
     if not os.path.exists(row[1]):
-      q4 = "UPDATE pyth_file SET fileexist = 0 WHERE id = '%s' " % row[0]
-      cur.execute(q4)
+      q2 = "UPDATE pyth_files SET fileexist = 0 WHERE id = '%s' " % row[0]
+      cur.execute(q2)
+    else:
+      q3 = "UPDATE pyth_files SET fileexist = 1 WHERE id = '%s' " % row[0]
+      cur.execute(q3)
+  
   con.commit()
   
 def filehash():
@@ -70,8 +72,6 @@ def filehash():
       newfileids = "%s,%s" % (fileids,strfileid)
       q3 = "UPDATE pyth_hash SET fileids = '%s', hashstamp = CURRENT_TIMESTAMP WHERE id = '%s' " % (newfileids,hashid)
       cur.execute(q3)
-  
-  
   con.commit()
  cur.close
 
@@ -85,14 +85,32 @@ def filemd5(filepath):
   md5.update(data)
  return md5.hexdigest()
 
-def arFind(var,varArray):
-  for tmp in varArray:
-    if var == tmp:
-      return 1
-  return 0
+def hashclean():
+  print "HASH CLEAN"
+  q1 = "SELECT id FROM pyth_files WHERE fileexist = 0"
+  cur.execute(q1)
+  rows = cur.fetchall()
+  for row in rows:
+    id = row[0]
+    q2 = """SELECT id,fileids 
+      FROM pyth_hash 
+      WHERE fileids = '%s' 
+      OR fileids LIKE '%%,%s' 
+      OR fileids LIKE '%s,%%' 
+      OR fileids LIKE '%%,%s,%%' """ % (id,id,id,id)
+    cur.execute(q2)
+    q2out = cur.fetchone()
+    q2outsplit = q2out[1].split(",")    
+    q2outsplit.remove(str(id))
+    q2outjoin = ",".join(q2outsplit)
+    
+    q3 = "UPDATE pyth_hash SET fileids = '%s', hashstamp = CURRENT_TIMESTAMP WHERE id = '%s' " % (q2outjoin,q2out[0])
+    print q3
+    cur.execute(q3)
+    con.commit() 
+    
 
 def filedupes():
-  #TODO: only output if at least one of the files is in the CWD
   q1 = "SELECT fileids,hash FROM pyth_hash WHERE fileids LIKE '%%,%%' "
   cur.execute(q1)
   rows = cur.fetchall()
@@ -111,7 +129,9 @@ def filedupes():
        cur.execute(q3)
        print " %s" % cur.fetchone()
   
-  ######################
+#################################################################
+
+con = None
       
 if(len(sys.argv) < 2):
   print "help text"
@@ -126,11 +146,13 @@ try:
   checkexist()
   fileindex()
  elif( sys.argv[1] == 'hash' ):
-  #clean fileids if file does not exist
+  hashclean()
   filehash()
  elif( sys.argv[1] == 'dupes' ):
+  
   filedupes()
  else:
+  #Write help text
   print "help text"
   
 except mdb.Error, e:
@@ -141,5 +163,6 @@ except mdb.Error, e:
 finally:
   if con:    
     con.close()
+
 
 
