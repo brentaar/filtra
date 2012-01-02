@@ -96,16 +96,20 @@ def filedupes():
   q1 = "SELECT fileids,hash FROM pyth_hash WHERE fileids LIKE '%%,%%' "
   cur.execute(q1)
   rows = cur.fetchall()
-  hashnumber = None
   for row in rows:
-    print "++++++++++++++++++++++++++++++++++++++++++++"
-    print "HASH: %s" % row[1]
-    varArray = row[0].split(",")
-    outputstr = None
-    for var in varArray:
-      q2 = "SELECT filepath from pyth_files WHERE id = '%s' " % var
-      cur.execute(q2)
-      print " %s" % cur.fetchone()
+    fids = row[0]
+    q2 = "SELECT * FROM pyth_files WHERE id IN(%s) AND filepath LIKE '%s%%' " % (fids,pytcwd)
+    cur.execute(q2)
+    q2out = cur.fetchone()
+    if q2out > 0:
+     print "++++++++++++++++++++++++++++++++++++++++++++"
+     print "HASH: %s" % row[1]
+     varArray = fids.split(",")
+     outputstr = None
+     for var in varArray:
+       q3 = "SELECT filepath from pyth_files WHERE id = '%s' " % var
+       cur.execute(q3)
+       print " %s" % cur.fetchone()
   
   ######################
       
