@@ -17,7 +17,7 @@ def fileindex():
       fileex = fileex.strip(".")
       filepath = os.path.join(root,files)
       filepath = msani(filepath)
-      q1 = "SELECT * FROM pyth_files WHERE filepath = '%s' " % filepath
+      q1 = "SELECT id FROM pyth_files WHERE filepath = '%s' " % filepath
       filename = os.path.basename(files)
       filename = msani(filename)
       cur.execute(q1)
@@ -31,7 +31,8 @@ def fileindex():
   cur.close()
 
 def msani(v):
-  v = v.replace("\'","\\\'")  
+  v = v.replace("\'","\\\'")
+  v = v.replace("\"","\\\"")  
   return v
 
 def checkexist():
@@ -73,7 +74,6 @@ def filehash():
       q3 = "UPDATE pyth_hash SET fileids = '%s', hashstamp = CURRENT_TIMESTAMP WHERE id = '%s' " % (newfileids,hashid)
       cur.execute(q3)
   con.commit()
- cur.close
 
 def filemd5(filepath):
  md5 = hashlib.md5()
@@ -108,7 +108,6 @@ def hashclean():
     cur.execute(q3)
     con.commit() 
     
-
 def filedupes():
   q1 = "SELECT fileids,hash FROM pyth_hash WHERE fileids LIKE '%%,%%' "
   cur.execute(q1)
@@ -137,7 +136,6 @@ if(len(sys.argv) < 2):
   sys.exit(1)
 
 try:
- 
  con = mdb.connect('localhost', 'pyth', 'shafted', 'pyth') 
  cur = con.cursor()
  pytcwd = os.getcwd() 
@@ -155,13 +153,9 @@ try:
   print "help text"
   
 except mdb.Error, e:
-
  print "Error %d: %s" % (e.args[0],e.args[1])
  sys.exit(1)
 
 finally:
   if con:    
     con.close()
-
-
-
