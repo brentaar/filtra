@@ -126,7 +126,13 @@ def filedupes():
        q3 = "SELECT filepath from pyth_files WHERE id = '%s' " % var
        cur.execute(q3)
        print " %s" % cur.fetchone()
-  
+
+def cluelessFileHash():
+  print "clfh"
+def cluelessHashClean():
+  print "clhc"
+def cluelessFileDupes():
+  print "clfd"
 #################################################################
 
 con = None
