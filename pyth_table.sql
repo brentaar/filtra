@@ -5,7 +5,7 @@ CREATE TABLE `pyth_files` (
   `filetype` varchar(20) DEFAULT NULL,
   `fileexist` binary(1) DEFAULT NULL,
   `filestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `filesize`  varchar,
+  `filesize`  bigint(20),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE `pyth_hash` (
