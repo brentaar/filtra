@@ -156,22 +156,15 @@ def countDupes():
   rows = cur.fetchall()
   for row in rows:
     fids = row[0]
-    q2 = "SELECT fileids FROM pyth_files WHERE id IN(%s) AND filepath LIKE '%s%%' " % (fids,pytcwd)
+    q2 = "SELECT id FROM pyth_files WHERE id IN(%s) AND filepath LIKE '%s%%' " % (fids,pytcwd)
     cur.execute(q2)
     q2out = cur.fetchone()
     if q2out > 0:
        varArray = fids.split(",")
        count = count + len(varArray) - 1
+  print ""
   print "Number of duplicated files %d " % count
   
-def GetInHMS(seconds):
-    hours = seconds / 3600
-    seconds -= 3600*hours
-    minutes = seconds / 60
-    seconds -= 60*minutes
-    if hours == 0:
-        return "%02d:%02d" % (minutes, seconds)
-    return "%02d:%02d:%02d" % (hours, minutes, seconds)
 
 #################################################################
 start = time.time()
