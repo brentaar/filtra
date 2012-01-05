@@ -50,28 +50,33 @@ def checkexist():
   con.commit()
   
 def filehash():
- cur.execute("SELECT id,filepath FROM pyth_files WHERE fileexist = 1 AND filepath LIKE '%s%%' " % pytcwd) 
+ q0 = "SELECT id,filepath FROM pyth_files WHERE fileexist = 1 AND filepath LIKE '%s%%' " % pytcwd
+ cur.execute(q0) 
  rows = cur.fetchall()
  for row in rows:
   fileid = row[0]
   filepath = row[1]
   filehash = filemd5(filepath)
   
-  q1 = "SELECT id,fileids FROM pyth_hash WHERE hash = '%s' " % filehash
+  q1 = "SELECT id FROM pyth_hash WHERE hash = '%s' " % filehash
   cur.execute(q1)
   rows1 = cur.fetchone()
   
   if rows1 < 1:
-    q2 = "INSERT INTO pyth_hash SET fileids = '%s', hash = '%s' " % (fileid,filehash)
+    q2 = "INSERT INTO pyth_hash SET hash = '%s' " % filehash
     cur.execute(q2)
+    #con.commit()
+    q2a = "INSERT INTO cl_pyth_hashmap SET hashid = '%s',fileid ='%s' " % (con.insert_id(),fileid)
+    cur.execute(q2a)
   else:
     hashid = rows1[0]
-    fileids = rows1[1]
-    strfileid = str(fileid)
-    ff = str(fileids).find(strfileid)
-    if ff < 0:
-      newfileids = "%s,%s" % (fileids,strfileid)
-      q3 = "UPDATE pyth_hash SET fileids = '%s', hashstamp = CURRENT_TIMESTAMP WHERE id = '%s' " % (newfileids,hashid)
+
+    q3a = "SELECT id FROM cl_pyth_hashmap WHERE hashid = '%s' AND fileid = '%s' " % (hashid,fileid)
+    cur.execute(q3a)
+    q3ars = cur.fetchone()
+    if q3ars < 0:
+      
+      q3 = "INSERT INTO cl_pyth_hashmap SET hashid = '%s',fileid ='%s' " % (hashid,fileid)
       cur.execute(q3)
   con.commit()
 
@@ -86,25 +91,14 @@ def filemd5(filepath):
  return md5.hexdigest()
 
 def hashclean():
-  q1 = "SELECT id FROM pyth_files WHERE fileexist = 0"
+  q1 = "SELECT id FROM pyth_files WHERE fileexist = 0 AND filepath LIKE '%s%%' " % pytcwd
   cur.execute(q1)
   rows = cur.fetchall()
+  joins = rows[0].join(",")
   for row in rows:
     id = row[0]
-    q2 = """SELECT id,fileids 
-      FROM pyth_hash 
-      WHERE fileids = '%s' 
-      OR fileids LIKE '%%,%s' 
-      OR fileids LIKE '%s,%%' 
-      OR fileids LIKE '%%,%s,%%' """ % (id,id,id,id)
-    cur.execute(q2)
-    q2out = cur.fetchone()
-    q2outsplit = q2out[1].split(",")    
-    q2outsplit.remove(str(id))
-    q2outjoin = ",".join(q2outsplit)
     
-    q3 = "UPDATE pyth_hash SET fileids = '%s', hashstamp = CURRENT_TIMESTAMP WHERE id = '%s' " % (q2outjoin,q2out[0])
-    print q3
+    q3 = "DELETE FROM cl_pyth_hashmap WHERE fileid = '%s'" % id
     cur.execute(q3)
     con.commit() 
     
@@ -127,12 +121,7 @@ def filedupes():
        cur.execute(q3)
        print " %s" % cur.fetchone()
 
-def cluelessFileHash():
-  print "clfh"
-def cluelessHashClean():
-  print "clhc"
-def cluelessFileDupes():
-  print "clfd"
+
 #################################################################
 
 con = None
