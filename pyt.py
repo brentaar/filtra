@@ -102,7 +102,10 @@ def filemd5(filepath):
  md5 = hashlib.md5()
  """should be a try catch blok that will skip
  the file and out put the error"""
- f = open(filepath)
+ try:
+  f = open(filepath)
+ except IOError as e:
+  return 0
  while True:
   data = f.read(8192)
   if not data:
