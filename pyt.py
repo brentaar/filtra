@@ -17,6 +17,9 @@ def fileindex():
       fileex = fileex.strip(".")
       filepath = os.path.join(root,files)
       filepath = msani(filepath)
+      filestat = os.stat(filepath)
+      #size in bytes
+      filesize = filestat.st_size
       q1 = "SELECT id FROM pyth_files WHERE filepath = '%s' " % filepath
       filename = os.path.basename(files)
       filename = msani(filename)
@@ -24,7 +27,8 @@ def fileindex():
       rows = cur.fetchone()     
       if rows < 1:
         q2 = """INSERT INTO pyth_files 
-          SET filename = '%s', filepath = '%s', filetype = '%s', fileexist = 1 """ % (filename,filepath,fileex)
+          SET filename = '%s', filepath = '%s', filetype = '%s', fileexist = 1, filesize = '%s' """ % (filename,filepath,fileex,filesize)
+
         cur.execute(q2)    
     con.commit()
 
@@ -127,12 +131,6 @@ def filedupes():
        cur.execute(q3)
        print " %s" % cur.fetchone()
 
-def cluelessFileHash():
-  print "clfh"
-def cluelessHashClean():
-  print "clhc"
-def cluelessFileDupes():
-  print "clfd"
 #################################################################
 
 con = None
