@@ -73,12 +73,13 @@ def convert_bytes(bytes):
     return size
       
 def filehash():
- cur.execute("SELECT id,filepath FROM pyth_files WHERE fileexist = 1 AND filepath LIKE '%s%%' ORDER BY filesize" % pytcwd) 
+ cur.execute("SELECT id,filepath,filesize FROM pyth_files WHERE fileexist = 1 AND filepath LIKE '%s%%' ORDER BY filesize" % pytcwd) 
  rows = cur.fetchall()
  for row in rows:
   fileid = row[0]
   filepath = row[1]
-  filehash = filemd5(filepath)
+  filesize = row[2]
+  filehash = filemd5(filepath,filesize)
   
   q1 = "SELECT id,fileids FROM pyth_hash WHERE hash = '%s' " % filehash
   cur.execute(q1)
@@ -98,16 +99,22 @@ def filehash():
       cur.execute(q3)
   con.commit()
 
-def filemd5(filepath):
+def filemd5(filepath,filesize):
+ readsize = filesize
+ 
  md5 = hashlib.md5()
  """should be a try catch blok that will skip
  the file and out put the error"""
  f = open(filepath)
- while True:
-  data = f.read(8192)
-  if not data:
-   break
-  md5.update(data)
+ if readsize > 8192:
+  while True:
+    data = f.read(8192)
+    if not data:
+     break
+   md5.update(data)
+ else:
+   data = f.read(readsize)
+   md5.update(data)
  return md5.hexdigest()
 
 def hashclean():
