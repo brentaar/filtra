@@ -6,7 +6,7 @@ import sys
 import os
 import hashlib
 import StringIO
-
+import time
 def fileindex():
   for root,dirs,files in os.walk(pytcwd):
     for files in files:
@@ -16,7 +16,13 @@ def fileindex():
       fileex = filespli[1]
       fileex = fileex.strip(".")
       filepath = os.path.join(root,files)
+      if not os.path.exists(filepath):
+       continue
+      filestat = os.stat(filepath)
       filepath = msani(filepath)
+      
+      #size in bytes
+      filesize = filestat.st_size
       q1 = "SELECT id FROM pyth_files WHERE filepath = '%s' " % filepath
       filename = os.path.basename(files)
       filename = msani(filename)
@@ -24,7 +30,8 @@ def fileindex():
       rows = cur.fetchone()     
       if rows < 1:
         q2 = """INSERT INTO pyth_files 
-          SET filename = '%s', filepath = '%s', filetype = '%s', fileexist = 1 """ % (filename,filepath,fileex)
+          SET filename = '%s', filepath = '%s', filetype = '%s', fileexist = 1, filesize = '%s' """ % (filename,filepath,fileex,filesize)
+
         cur.execute(q2)    
     con.commit()
 
@@ -48,15 +55,36 @@ def checkexist():
       cur.execute(q3)
   
   con.commit()
-  
+
+def convert_bytes(bytes):
+    bytes = float(bytes)
+    if bytes >= 1099511627776:
+        terabytes = bytes / 1099511627776
+        size = '%.2fT' % terabytes
+    elif bytes >= 1073741824:
+        gigabytes = bytes / 1073741824
+        size = '%.2fG' % gigabytes
+    elif bytes >= 1048576:
+        megabytes = bytes / 1048576
+        size = '%.2fM' % megabytes
+    elif bytes >= 1024:
+        kilobytes = bytes / 1024
+        size = '%.2fK' % kilobytes
+    else:
+        size = '%.2fb' % bytes
+    return size
+      
 def filehash():
- q0 = "SELECT id,filepath FROM pyth_files WHERE fileexist = 1 AND filepath LIKE '%s%%' " % pytcwd
+
+ q0 = "SELECT id,filepath,filesize FROM pyth_files WHERE fileexist = 1 AND filepath LIKE '%s%%' ORDER BY filesize" % pytcwd
  cur.execute(q0) 
+
  rows = cur.fetchall()
  for row in rows:
   fileid = row[0]
   filepath = row[1]
-  filehash = filemd5(filepath)
+  filesize = row[2]
+  filehash = filemd5(filepath,filesize)
   
   q1 = "SELECT id FROM pyth_hash WHERE hash = '%s' " % filehash
   cur.execute(q1)
@@ -80,17 +108,29 @@ def filehash():
       cur.execute(q3)
   con.commit()
 
-def filemd5(filepath):
+def filemd5(filepath,filesize):
+ readsize = filesize
+ 
  md5 = hashlib.md5()
- f = open(filepath)
- while True:
-  data = f.read(8192)
-  if not data:
-   break
+ """should be a try catch blok that will skip
+ the file and out put the error"""
+ try:
+  f = open(filepath)
+ except IOError as e:
+  return 0
+ if readsize > 8192:
+  while True:
+   data = f.read(8192)
+   if not data:
+    break
+   md5.update(data)
+ else:
+  data = f.read(readsize)
   md5.update(data)
  return md5.hexdigest()
 
 def hashclean():
+
   q1 = "SELECT id FROM pyth_files WHERE fileexist = 0 AND filepath LIKE '%s%%' " % pytcwd
   cur.execute(q1)
   rows = cur.fetchall()
@@ -101,6 +141,7 @@ def hashclean():
     q3 = "DELETE FROM cl_pyth_hashmap WHERE fileid = '%s'" % id
     cur.execute(q3)
     con.commit() 
+
     
 def filedupes():
   q1 = "SELECT fileids,hash FROM pyth_hash WHERE fileids LIKE '%%,%%' "
@@ -115,15 +156,29 @@ def filedupes():
      print "++++++++++++++++++++++++++++++++++++++++++++"
      print "HASH: %s" % row[1]
      varArray = fids.split(",")
-     outputstr = None
      for var in varArray:
        q3 = "SELECT filepath from pyth_files WHERE id = '%s' " % var
        cur.execute(q3)
        print " %s" % cur.fetchone()
 
+def countDupes():
+  count = 0
+  q1 = "SELECT fileids,hash FROM pyth_hash WHERE fileids LIKE '%%,%%' "
+  cur.execute(q1)
+  rows = cur.fetchall()
+  for row in rows:
+    fids = row[0]
+    q2 = "SELECT id FROM pyth_files WHERE id IN(%s) AND filepath LIKE '%s%%' " % (fids,pytcwd)
+    cur.execute(q2)
+    q2out = cur.fetchone()
+    if q2out > 0:
+       varArray = fids.split(",")
+       count = count + len(varArray) - 1
+  print ""
+  print "Number of duplicated files %d " % count
 
 #################################################################
-
+start = time.time()
 con = None
       
 if(len(sys.argv) < 2):
@@ -143,6 +198,8 @@ try:
  elif( sys.argv[1] == 'dupes' ):
   
   filedupes()
+ elif(sys.argv[1] == 'cdupes' ):
+  countDupes()
  else:
   #Write help text
   print "help text"
@@ -154,3 +211,11 @@ except mdb.Error, e:
 finally:
   if con:    
     con.close()
+
+elapsed = (time.time() - start)
+
+print ""
+print "Elapsed %f seconds" % elapsed
+print ""
+
+exit()
