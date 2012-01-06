@@ -109,11 +109,8 @@ def filehash():
   con.commit()
 
 def filemd5(filepath,filesize):
- readsize = filesize
- 
+ readsize = filesize 
  md5 = hashlib.md5()
- """should be a try catch blok that will skip
- the file and out put the error"""
  try:
   f = open(filepath)
  except IOError as e:
@@ -130,17 +127,11 @@ def filemd5(filepath,filesize):
  return md5.hexdigest()
 
 def hashclean():
-
-  q1 = "SELECT id FROM pyth_files WHERE fileexist = 0 AND filepath LIKE '%s%%' " % pytcwd
-  cur.execute(q1)
-  rows = cur.fetchall()
-  joins = rows[0].join(",")
-  for row in rows:
-    id = row[0]
-    
-    q3 = "DELETE FROM cl_pyth_hashmap WHERE fileid = '%s'" % id
-    cur.execute(q3)
-    con.commit() 
+  q3 = """DELETE FROM cl_pyth_hashmap WHERE fileid IN(
+  SELECT id FROM pyth_files WHERE fileexist = 0 AND filepath LIKE '%s%%'
+  ) """ % pytcwd
+  cur.execute(q3)
+  con.commit() 
 
     
 def filedupes():
