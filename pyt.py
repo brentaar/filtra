@@ -23,7 +23,7 @@ def fileindex():
       
       #size in bytes
       filesize = filestat.st_size
-      q1 = "SELECT id FROM pyth_files WHERE filepath = '%s' " % filepath
+      q1 = "SELECT fileid FROM pyth_files WHERE filepath = '%s' " % filepath
       filename = os.path.basename(files)
       filename = msani(filename)
       cur.execute(q1)
@@ -43,15 +43,15 @@ def msani(v):
   return v
 
 def checkexist():
-  q1 = "SELECT id,filepath FROM pyth_files WHERE filepath LIKE '%s%%' " % pytcwd
+  q1 = "SELECT fileid,filepath FROM pyth_files WHERE filepath LIKE '%s%%' " % pytcwd
   cur.execute(q1)
   rows = cur.fetchall()
   for row in rows:
     if not os.path.exists(row[1]):
-      q2 = "UPDATE pyth_files SET fileexist = 0 WHERE id = '%s' " % row[0]
+      q2 = "UPDATE pyth_files SET fileexist = 0 WHERE fileid = '%s' " % row[0]
       cur.execute(q2)
     else:
-      q3 = "UPDATE pyth_files SET fileexist = 1 WHERE id = '%s' " % row[0]
+      q3 = "UPDATE pyth_files SET fileexist = 1 WHERE fileid = '%s' " % row[0]
       cur.execute(q3)
   
   con.commit()
@@ -76,7 +76,7 @@ def convert_bytes(bytes):
       
 def filehash():
 
- q0 = "SELECT id,filepath,filesize FROM pyth_files WHERE fileexist = 1 AND filepath LIKE '%s%%' ORDER BY filesize" % pytcwd
+ q0 = "SELECT fileid,filepath,filesize FROM pyth_files WHERE fileexist = 1 AND filepath LIKE '%s%%' ORDER BY filesize" % pytcwd
  cur.execute(q0) 
 
  rows = cur.fetchall()
@@ -86,7 +86,7 @@ def filehash():
   filesize = row[2]
   filehash = filemd5(filepath,filesize)
   
-  q1 = "SELECT id FROM pyth_hash WHERE hash = '%s' " % filehash
+  q1 = "SELECT hashid FROM pyth_hash WHERE hash = '%s' " % filehash
   cur.execute(q1)
   rows1 = cur.fetchone()
   
@@ -99,7 +99,7 @@ def filehash():
   else:
     hashid = rows1[0]
 
-    q3a = "SELECT id FROM cl_pyth_hashmap WHERE hashid = '%s' AND fileid = '%s' " % (hashid,fileid)
+    q3a = "SELECT mapid FROM cl_pyth_hashmap WHERE hashid = '%s' AND fileid = '%s' " % (hashid,fileid)
     cur.execute(q3a)
     q3ars = cur.fetchone()
     if q3ars < 0:
@@ -128,19 +128,22 @@ def filemd5(filepath,filesize):
 
 def hashclean():
   q3 = """DELETE FROM cl_pyth_hashmap WHERE fileid IN(
-  SELECT id FROM pyth_files WHERE fileexist = 0 AND filepath LIKE '%s%%'
+  SELECT fileid FROM pyth_files WHERE fileexist = 0 AND filepath LIKE '%s%%'
   ) """ % pytcwd
   cur.execute(q3)
   con.commit() 
-
-    
+   
 def filedupes():
-  q1 = "SELECT fileids,hash FROM pyth_hash WHERE fileids LIKE '%%,%%' "
-  cur.execute(q1)
+  q0 = """select hashid from cl_pyth_hashmap cl INNER JOIN pyth_files pf USING(fileid)
+   where filepath like '%s%%' group by hashid having count(fileid) > 1 """ % pytcwd
+  cur.execute(q0)
   rows = cur.fetchall()
+  if
+  rj = rows[0]
+  q1 = "SELECT 
   for row in rows:
     fids = row[0]
-    q2 = "SELECT * FROM pyth_files WHERE id IN(%s) AND filepath LIKE '%s%%' " % (fids,pytcwd)
+    q2 = "SELECT * FROM pyth_files WHERE fileid IN(%s) AND filepath LIKE '%s%%' " % (fids,pytcwd)
     cur.execute(q2)
     q2out = cur.fetchone()
     if q2out > 0:
@@ -148,7 +151,7 @@ def filedupes():
      print "HASH: %s" % row[1]
      varArray = fids.split(",")
      for var in varArray:
-       q3 = "SELECT filepath from pyth_files WHERE id = '%s' " % var
+       q3 = "SELECT filepath from pyth_files WHERE fileid = '%s' " % var
        cur.execute(q3)
        print " %s" % cur.fetchone()
 

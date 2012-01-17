@@ -1,5 +1,5 @@
 CREATE TABLE `pyth_files` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `fileid` bigint(20) NOT NULL AUTO_INCREMENT,
   `filename` text,
   `filepath` text,
   `filetype` text DEFAULT NULL,
@@ -7,18 +7,19 @@ CREATE TABLE `pyth_files` (
   `filestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `filesize`  bigint(20),
   INDEX (`filesize`),
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`fileid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE `pyth_hash` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `hashid` bigint(20) NOT NULL AUTO_INCREMENT,
   `hash` varchar(32) NOT NULL DEFAULT '',
   `hashstamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`hashid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 CREATE TABLE `cl_pyth_hashmap` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `mapid` bigint(20) NOT NULL AUTO_INCREMENT,
   `hashid` int NOT NULL ,
   `fileid` int NOT NULL,
-  primary key(id)
+  INDEX(`hashid`),
+  primary key(mapid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
