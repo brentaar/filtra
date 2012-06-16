@@ -182,13 +182,34 @@ def countDupes():
   print ""
   print "Number of duplicated files %d " % count
   
+def stdHelptText():
+  print "filtra.py <index|hash|dupes|cdupes>"
+  print " index:  recurively find files in and below"
+  print "         current working directory"
+  print " hash:   run hash function on files in and below"
+  print "         current working directory"
+  print " dupes:  Print to STD output the hash and location"
+  print "         of all duplicated files in the database"
+  print "         that are in and below current working"
+  print "         directory"
 
 #################################################################
 start = time.time()
 con = None
-      
+
+if( sys.argv[2] == 'help'):
+  if( sys.argv[1] == 'index' ):
+    #index help text
+  elif( sys.argv[1] == 'hash' ):
+    #hash help text
+  elif( sys.argv[1] == 'dupes' ):
+    #dupes help text
+  elif(sys.argv[1] == 'cdupes' ):
+    #cdues help text
+  exit()
+
 if(len(sys.argv) < 2):
-  print "help text"
+  stdHelpText()
   sys.exit(1)
 
 try:
@@ -202,14 +223,11 @@ try:
   hashclean()
   filehash()
  elif( sys.argv[1] == 'dupes' ):
-  
   filedupes()
  elif(sys.argv[1] == 'cdupes' ):
   countDupes()
  else:
-  #Write help text
-  print "help text"
-  
+  stdHelpText() 
 except mdb.Error, e:
  print "Error %d: %s" % (e.args[0],e.args[1])
  sys.exit(1)
