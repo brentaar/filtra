@@ -1,1 +1,54 @@
+#Writer:     brentaar
+#Date:       06/16/2012
+#
+#Objective:  To have a simple way to keep track of users files,
+#            make sure there are not duplicates of files, and a 
+#            verifiable way to check the integrity of the scanned 
+#            files.
+#
+#Goals:   1) Locate every file from the current working directory
+#            and put meta data about those files in a table that 
+#            is database preferably in a hidden directory under 
+#            the home directory
+#         2) Hash each file for duplication checking purposes
+#            and file ingerity purposes
+#
+#
+#Current state: 
+#   
+#   License:    The MPL-2.0 has been chosen for this project
+#
+#   Database:   The project can add meta data of files into a MySQL database
+#
+#   Hash:       The hashing of each file is done with pythons md5 function
+#
+#   Dupe Check: Take hash, check to see if there is already an existing
+#               table entry that has that hash, append in the fileids column; 
+#               if the entry does not exist create new entry and append in 
+#               fileids column
+#
+#Things TODO
+#   
+#   Database:  1)  Determine a better way to create the conf file
+#              2)  Allow the use of other databases especially 
+#                  SQLite
+#              3)  Create a database abstraction layer  
+#
+#   Hash:      1)  Allow other hashing functions
+#              2)  Research the speed of using python hashing vs other
+#                  hashing mechnisms like bash or a C program
+#   
+#   Help Text:  1)  Write HT for index
+#               2)  Write HT for hash
+#               3)  Write HT for dupes
+#               4)  Write HT for cdupes
+#
+#   Install:    1)  Create install flag
+#               2)  Create installation process
+#                 a)  Create directory in the home file named .filtra
+#                 b)  In the .filtra directory the conf file will live,
+#                     the SQL database will live there if that was the
+#                     option that was chosen
+#
+#Refinement   
 TODO: Writeup README file

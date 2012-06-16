@@ -12,6 +12,7 @@ CREATE TABLE `pyth_files` (
 CREATE TABLE `pyth_hash` (
   `hashid` bigint(20) NOT NULL AUTO_INCREMENT,
   `hash` varchar(32) NOT NULL DEFAULT '',
+  `hashfunction` varchar(32) NOT NULL DEFAULT '',
   `hashstamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`hashid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
